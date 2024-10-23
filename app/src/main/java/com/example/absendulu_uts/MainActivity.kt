@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.MediaStore
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -28,7 +29,6 @@ class MainActivity : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
-        imageView = findViewById(R.id.imageView)
 
         // Check if user is logged in
         if (auth.currentUser == null) {
@@ -55,6 +55,14 @@ class MainActivity : AppCompatActivity() {
 
         // Set default selection
         bottomNavigation.selectedItemId = R.id.navigation_profile
+
+        // Logout button functionality
+        val logoutButton: Button = findViewById(R.id.logoutButton)
+        logoutButton.setOnClickListener {
+            auth.signOut()
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+        }
     }
 
     private fun openCamera() {

@@ -28,5 +28,19 @@
             android:layout_height="wrap_content"
             android:text="Save"
             android:layout_gravity="center" />
+
+        <TextView
+            android:id="@+id/textViewName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/textViewNim"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:textSize="18sp" />
     </LinearLayout>
 </FrameLayout>
