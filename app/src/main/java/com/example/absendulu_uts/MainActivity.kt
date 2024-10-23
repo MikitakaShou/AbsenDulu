@@ -6,12 +6,13 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.MediaStore
-import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.*
@@ -36,21 +37,24 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        val captureButton = findViewById<Button>(R.id.captureButton)
-        captureButton.setOnClickListener {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 100)
-            } else {
-                openCamera()
+        val bottomNavigation: BottomNavigationView = findViewById(R.id.bottom_navigation)
+        bottomNavigation.setOnNavigationItemSelectedListener { item ->
+            var selectedFragment: Fragment? = null
+            when (item.itemId) {
+                R.id.navigation_profile -> selectedFragment = ProfileFragment()
+                R.id.navigation_camera -> selectedFragment = CameraFragment()
+                R.id.navigation_history -> selectedFragment = HistoryFragment()
             }
+            if (selectedFragment != null) {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container, selectedFragment)
+                    .commit()
+            }
+            true
         }
 
-        val logoutButton = findViewById<Button>(R.id.logoutButton)
-        logoutButton.setOnClickListener {
-            auth.signOut()
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
-        }
+        // Set default selection
+        bottomNavigation.selectedItemId = R.id.navigation_profile
     }
 
     private fun openCamera() {
