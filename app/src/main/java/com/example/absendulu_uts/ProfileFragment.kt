@@ -1,6 +1,8 @@
 package com.example.absendulu_uts
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +13,8 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ProfileFragment : Fragment() {
     private lateinit var nameEditText: EditText
@@ -18,8 +22,17 @@ class ProfileFragment : Fragment() {
     private lateinit var nameTextView: TextView
     private lateinit var nimTextView: TextView
     private lateinit var saveButton: Button
+    private lateinit var digitalClock: TextView
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
+    private val handler = Handler(Looper.getMainLooper())
+    private val updateTimeRunnable = object : Runnable {
+        override fun run() {
+            val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+            digitalClock.text = currentTime
+            handler.postDelayed(this, 1000)
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -31,6 +44,7 @@ class ProfileFragment : Fragment() {
         nameTextView = view.findViewById(R.id.textViewName)
         nimTextView = view.findViewById(R.id.textViewNim)
         saveButton = view.findViewById(R.id.button_save)
+        digitalClock = view.findViewById(R.id.digitalClock)
 
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
@@ -81,7 +95,13 @@ class ProfileFragment : Fragment() {
             }
         }
 
+        handler.post(updateTimeRunnable)
         return view
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        handler.removeCallbacks(updateTimeRunnable)
     }
 
     private fun displayProfile(name: String, nim: String) {

@@ -1,35 +1,58 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     tools:context=".HistoryFragment">
 
-    <TextView
-        android:id="@+id/textViewMasukTimestamp"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:text="Masuk Timestamp" />
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="20dp">
 
-    <ImageView
-        android:id="@+id/imageViewMasuk"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:contentDescription="@string/image_view_masuk_desc"
-        android:layout_margin="8dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Absen Masuk"
+            android:textSize="18sp"
+            android:layout_gravity="center"
+            android:layout_marginTop="20dp" />
 
-    <TextView
-        android:id="@+id/textViewPulangTimestamp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:text="Pulang Timestamp" />
+        <ImageView
+            android:id="@+id/imageViewMasuk"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp" />
 
-    <ImageView
-        android:id="@+id/imageViewPulang"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:contentDescription="@string/image_view_pulang_desc"
-        android:layout_margin="8dp" />
-</LinearLayout>
+        <TextView
+            android:id="@+id/textViewMasukTimestamp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:layout_gravity="center"
+            android:layout_marginTop="10dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Absen Pulang"
+            android:textSize="18sp"
+            android:layout_gravity="center"
+            android:layout_marginTop="20dp" />
+
+        <ImageView
+            android:id="@+id/imageViewPulang"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp" />
+
+        <TextView
+            android:id="@+id/textViewPulangTimestamp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:layout_gravity="center"
+            android:layout_marginTop="10dp" />
+    </LinearLayout>
+</FrameLayout>
