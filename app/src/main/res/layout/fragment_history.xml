@@ -1,11 +1,35 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".HistoryFragment">
 
-    <RecyclerView
-        android:id="@+id/recyclerView"
+    <TextView
+        android:id="@+id/textViewMasukTimestamp"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-</FrameLayout>
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:text="Masuk Timestamp" />
+
+    <ImageView
+        android:id="@+id/imageViewMasuk"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/image_view_masuk_desc"
+        android:layout_margin="8dp" />
+
+    <TextView
+        android:id="@+id/textViewPulangTimestamp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:text="Pulang Timestamp" />
+
+    <ImageView
+        android:id="@+id/imageViewPulang"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/image_view_pulang_desc"
+        android:layout_margin="8dp" />
+</LinearLayout>

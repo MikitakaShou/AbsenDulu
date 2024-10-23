@@ -1,20 +1,37 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".CameraFragment">
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <RadioGroup
+        android:id="@+id/radioGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/radioButtonMasuk"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Masuk" />
+
+        <RadioButton
+            android:id="@+id/radioButtonPulang"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pulang" />
+    </RadioGroup>
 
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
         android:contentDescription="@string/image_view_desc" />
 
     <Button
-        android:id="@+id/button_take_photo"
+        android:id="@+id/captureButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Take Photo"
-        android:layout_gravity="center" />
-</FrameLayout>
+        android:text="Capture" />
+</LinearLayout>

@@ -9,11 +9,38 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.RadioButton
+import android.widget.RadioGroup
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import java.util.*
+import android.util.Base64
+import java.io.ByteArrayOutputStream
+import android.graphics.BitmapFactory
+
+fun bitmapToBase64(bitmap: Bitmap): String {
+    val byteArrayOutputStream = ByteArrayOutputStream()
+    bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
+    val byteArray = byteArrayOutputStream.toByteArray()
+    return Base64.encodeToString(byteArray, Base64.DEFAULT)
+}
+
+fun base64ToBitmap(base64Str: String): Bitmap {
+    val decodedBytes = Base64.decode(base64Str, Base64.DEFAULT)
+    return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+}
 
 class CameraFragment : Fragment() {
     private lateinit var imageView: ImageView
+    private lateinit var radioGroup: RadioGroup
+    private lateinit var radioButtonMasuk: RadioButton
+    private lateinit var radioButtonPulang: RadioButton
+    private lateinit var captureButton: Button
+    private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseFirestore
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -21,12 +48,29 @@ class CameraFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_camera, container, false)
         imageView = view.findViewById(R.id.imageView)
-        val button: Button = view.findViewById(R.id.button_take_photo)
-        button.setOnClickListener {
-            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            startActivityForResult(intent, 101)
+        radioGroup = view.findViewById(R.id.radioGroup)
+        radioButtonMasuk = view.findViewById(R.id.radioButtonMasuk)
+        radioButtonPulang = view.findViewById(R.id.radioButtonPulang)
+        captureButton = view.findViewById(R.id.captureButton)
+
+        auth = FirebaseAuth.getInstance()
+        db = FirebaseFirestore.getInstance()
+
+        captureButton.setOnClickListener {
+            val selectedId = radioGroup.checkedRadioButtonId
+            if (selectedId == -1) {
+                Toast.makeText(context, "Please select absensi type", Toast.LENGTH_SHORT).show()
+            } else {
+                openCamera()
+            }
         }
+
         return view
+    }
+
+    private fun openCamera() {
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        startActivityForResult(intent, 101)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -34,7 +78,38 @@ class CameraFragment : Fragment() {
         if (requestCode == 101 && resultCode == AppCompatActivity.RESULT_OK) {
             val imageBitmap = data?.extras?.get("data") as Bitmap
             imageView.setImageBitmap(imageBitmap)
-            // Save attendance logic here
+            saveAttendance(imageBitmap)
         }
+    }
+
+    private fun saveAttendance(image: Bitmap) {
+        val user = auth.currentUser
+        val timestamp = System.currentTimeMillis()
+        val date = Date(timestamp)
+        val selectedId = radioGroup.checkedRadioButtonId
+        val absensiType = if (selectedId == R.id.radioButtonMasuk) "masuk" else "pulang"
+        val imageBase64 = bitmapToBase64(image)
+
+        val attendance = hashMapOf(
+            "userId" to user?.uid,
+            "timestamp" to date,
+            "image" to imageBase64,
+            "type" to absensiType
+        )
+
+        db.collection("attendance")
+            .add(attendance)
+            .addOnSuccessListener {
+                Toast.makeText(context, "Attendance recorded", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(context, "Failed to record attendance: ${e.message}", Toast.LENGTH_SHORT).show()
+                e.printStackTrace() // Log the error for debugging
+            }
+    }
+
+    private fun displayAttendance(imageBase64: String) {
+        val bitmap = base64ToBitmap(imageBase64)
+        imageView.setImageBitmap(bitmap)
     }
 }
