@@ -22,8 +22,21 @@ class RegisterActivity : AppCompatActivity() {
         val registerButton = findViewById<Button>(R.id.registerButton)
 
         registerButton.setOnClickListener {
-            val email = emailField.text.toString()
-            val password = passwordField.text.toString()
+            val email = emailField.text.toString().trim()
+            val password = passwordField.text.toString().trim()
+
+            if (email.isEmpty()) {
+                emailField.error = "Email is required"
+                emailField.requestFocus()
+                return@setOnClickListener
+            }
+
+            if (password.isEmpty()) {
+                passwordField.error = "Password is required"
+                passwordField.requestFocus()
+                return@setOnClickListener
+            }
+
             auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this) { task ->
                     if (task.isSuccessful) {

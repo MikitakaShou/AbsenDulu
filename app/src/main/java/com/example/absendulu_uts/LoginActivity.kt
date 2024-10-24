@@ -20,24 +20,32 @@ class LoginActivity : AppCompatActivity() {
         val emailField = findViewById<EditText>(R.id.email)
         val passwordField = findViewById<EditText>(R.id.password)
         val loginButton = findViewById<Button>(R.id.loginButton)
-        val registerButton = findViewById<Button>(R.id.registerButton)
 
         loginButton.setOnClickListener {
-            val email = emailField.text.toString()
-            val password = passwordField.text.toString()
+            val email = emailField.text.toString().trim()
+            val password = passwordField.text.toString().trim()
+
+            if (email.isEmpty()) {
+                emailField.error = "Email is required"
+                emailField.requestFocus()
+                return@setOnClickListener
+            }
+
+            if (password.isEmpty()) {
+                passwordField.error = "Password is required"
+                passwordField.requestFocus()
+                return@setOnClickListener
+            }
+
             auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this) { task ->
                     if (task.isSuccessful) {
                         startActivity(Intent(this, MainActivity::class.java))
                         finish()
                     } else {
-                        Toast.makeText(this, "Authentication failed.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Login failed.", Toast.LENGTH_SHORT).show()
                     }
                 }
-        }
-
-        registerButton.setOnClickListener {
-            startActivity(Intent(this, RegisterActivity::class.java))
         }
     }
 }
