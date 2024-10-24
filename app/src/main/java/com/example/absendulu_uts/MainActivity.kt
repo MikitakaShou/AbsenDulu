@@ -79,6 +79,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStop() {
+        super.onStop()
+        auth.signOut()
+    }
+
     private fun saveAttendance(image: Bitmap) {
         val user = auth.currentUser
         val timestamp = System.currentTimeMillis()
