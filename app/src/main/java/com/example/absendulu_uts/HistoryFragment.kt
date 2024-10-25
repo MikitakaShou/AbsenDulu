@@ -1,11 +1,16 @@
 package com.example.absendulu_uts
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Base64
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -58,11 +63,18 @@ class HistoryFragment : Fragment() {
                             imageViewPulang.setImageBitmap(bitmap)
                             textViewPulangTimestamp.text = formattedTimestamp
                         }
+                        Log.d("loadAttendanceImages", "Attendance data loaded: $document")
                     }
                 }
             }
-            .addOnFailureListener {
-                // Handle any errors
+            .addOnFailureListener { e ->
+                Toast.makeText(context, "Failed to load attendance: ${e.message}", Toast.LENGTH_SHORT).show()
+                Log.e("loadAttendanceImages", "Error loading attendance", e)
             }
+    }
+
+    private fun base64ToBitmap(base64Str: String): Bitmap {
+        val decodedBytes = Base64.decode(base64Str, Base64.DEFAULT)
+        return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
     }
 }

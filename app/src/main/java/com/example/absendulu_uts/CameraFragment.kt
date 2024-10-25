@@ -4,33 +4,18 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Base64
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.CheckBox
-import android.widget.ImageView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import java.util.*
-import android.util.Base64
 import java.io.ByteArrayOutputStream
-import android.graphics.BitmapFactory
-
-fun bitmapToBase64(bitmap: Bitmap): String {
-    val byteArrayOutputStream = ByteArrayOutputStream()
-    bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
-    val byteArray = byteArrayOutputStream.toByteArray()
-    return Base64.encodeToString(byteArray, Base64.DEFAULT)
-}
-
-fun base64ToBitmap(base64Str: String): Bitmap {
-    val decodedBytes = Base64.decode(base64Str, Base64.DEFAULT)
-    return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
-}
+import java.util.*
 
 class CameraFragment : Fragment() {
     private lateinit var imageView: ImageView
@@ -100,27 +85,28 @@ class CameraFragment : Fragment() {
         val date = Date(timestamp)
         val absensiType = if (checkBoxMasuk.isChecked) "masuk" else "pulang"
         val imageBase64 = bitmapToBase64(image)
-
         val attendance = hashMapOf(
             "userId" to user?.uid,
             "timestamp" to date,
             "image" to imageBase64,
             "type" to absensiType
         )
-
         db.collection("attendance")
             .add(attendance)
             .addOnSuccessListener {
                 Toast.makeText(context, "Attendance recorded", Toast.LENGTH_SHORT).show()
+                Log.d("saveAttendance", "Attendance data saved: $attendance")
             }
             .addOnFailureListener { e ->
                 Toast.makeText(context, "Failed to record attendance: ${e.message}", Toast.LENGTH_SHORT).show()
-                e.printStackTrace() // Log the error for debugging
+                Log.e("saveAttendance", "Error saving attendance", e)
             }
     }
 
-    private fun displayAttendance(imageBase64: String) {
-        val bitmap = base64ToBitmap(imageBase64)
-        imageView.setImageBitmap(bitmap)
+    private fun bitmapToBase64(bitmap: Bitmap): String {
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
+        val byteArray = byteArrayOutputStream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.DEFAULT)
     }
 }

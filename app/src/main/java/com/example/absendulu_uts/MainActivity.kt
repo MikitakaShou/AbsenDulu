@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Base64
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
@@ -12,6 +13,8 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import java.io.ByteArrayOutputStream
+import java.text.SimpleDateFormat
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
@@ -71,23 +74,40 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == 101 && resultCode == RESULT_OK) {
             val imageBitmap = data?.extras?.get("data") as Bitmap
             imageView.setImageBitmap(imageBitmap)
-            saveAttendance(imageBitmap)
+            checkAndSaveAttendance(imageBitmap)
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-        auth.signOut()
+    private fun checkAndSaveAttendance(image: Bitmap) {
+        val user = auth.currentUser
+        val currentDate = getCurrentDate()
+
+        db.collection("attendance")
+            .whereEqualTo("userId", user?.uid)
+            .whereEqualTo("date", currentDate)
+            .get()
+            .addOnSuccessListener { documents ->
+                if (documents.isEmpty) {
+                    saveAttendance(image)
+                } else {
+                    Toast.makeText(this, "You have already recorded attendance today", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to check attendance", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun saveAttendance(image: Bitmap) {
         val user = auth.currentUser
         val timestamp = System.currentTimeMillis()
         val date = Date(timestamp)
+        val currentDate = getCurrentDate()
         val attendance = hashMapOf(
             "userId" to user?.uid,
             "timestamp" to date,
-            "image" to image // You need to convert the image to a storable format
+            "date" to currentDate,
+            "image" to bitmapToBase64(image)
         )
 
         db.collection("attendance")
@@ -98,5 +118,21 @@ class MainActivity : AppCompatActivity() {
             .addOnFailureListener {
                 Toast.makeText(this, "Failed to record attendance", Toast.LENGTH_SHORT).show()
             }
+    }
+
+    private fun getCurrentDate(): String {
+        val calendar = Calendar.getInstance()
+        if (calendar.get(Calendar.HOUR_OF_DAY) < 8) {
+            calendar.add(Calendar.DATE, -1)
+        }
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        return dateFormat.format(calendar.time)
+    }
+
+    private fun bitmapToBase64(bitmap: Bitmap): String {
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
+        val byteArray = byteArrayOutputStream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.DEFAULT)
     }
 }
