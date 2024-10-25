@@ -20,22 +20,11 @@ class RegisterActivity : AppCompatActivity() {
         val emailField = findViewById<EditText>(R.id.email)
         val passwordField = findViewById<EditText>(R.id.password)
         val registerButton = findViewById<Button>(R.id.registerButton)
+        val backButton = findViewById<Button>(R.id.backButton)
 
         registerButton.setOnClickListener {
             val email = emailField.text.toString().trim()
             val password = passwordField.text.toString().trim()
-
-            if (email.isEmpty()) {
-                emailField.error = "Email is required"
-                emailField.requestFocus()
-                return@setOnClickListener
-            }
-
-            if (password.isEmpty()) {
-                passwordField.error = "Password is required"
-                passwordField.requestFocus()
-                return@setOnClickListener
-            }
 
             auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this) { task ->
@@ -43,9 +32,13 @@ class RegisterActivity : AppCompatActivity() {
                         startActivity(Intent(this, MainActivity::class.java))
                         finish()
                     } else {
-                        Toast.makeText(this, "Registration failed.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Registration failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
+        }
+
+        backButton.setOnClickListener {
+            finish() // This will close the current activity and go back to the previous one
         }
     }
 }

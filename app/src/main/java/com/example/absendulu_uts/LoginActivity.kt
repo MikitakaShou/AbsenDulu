@@ -10,37 +10,29 @@ import com.google.firebase.auth.FirebaseAuth
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
+    private lateinit var emailField: EditText
+    private lateinit var passwordField: EditText
+    private lateinit var registerButton: Button
+    private lateinit var loginButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
         auth = FirebaseAuth.getInstance()
+        emailField = findViewById(R.id.email)
+        passwordField = findViewById(R.id.password)
+        registerButton = findViewById(R.id.registerButton)
+        loginButton = findViewById(R.id.loginButton)
 
-        if (auth.currentUser != null) {
-            startActivity(Intent(this, MainActivity::class.java))
-            finish()
+        registerButton.setOnClickListener {
+            val intent = Intent(this, RegisterActivity::class.java)
+            startActivity(intent)
         }
-
-        val emailField = findViewById<EditText>(R.id.email)
-        val passwordField = findViewById<EditText>(R.id.password)
-        val loginButton = findViewById<Button>(R.id.loginButton)
 
         loginButton.setOnClickListener {
             val email = emailField.text.toString().trim()
             val password = passwordField.text.toString().trim()
-
-            if (email.isEmpty()) {
-                emailField.error = "Email is required"
-                emailField.requestFocus()
-                return@setOnClickListener
-            }
-
-            if (password.isEmpty()) {
-                passwordField.error = "Password is required"
-                passwordField.requestFocus()
-                return@setOnClickListener
-            }
 
             auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this) { task ->
@@ -48,7 +40,7 @@ class LoginActivity : AppCompatActivity() {
                         startActivity(Intent(this, MainActivity::class.java))
                         finish()
                     } else {
-                        Toast.makeText(this, "Login failed.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Login failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
         }
