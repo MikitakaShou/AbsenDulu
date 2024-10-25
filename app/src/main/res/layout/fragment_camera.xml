@@ -12,8 +12,7 @@
         android:orientation="vertical"
         android:padding="20dp">
 
-        <RadioGroup
-            android:id="@+id/radioGroup"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -34,8 +33,8 @@
                     android:contentDescription="App Logo Masuk"
                     android:src="@drawable/masuk" />
 
-                <RadioButton
-                    android:id="@+id/radioButtonMasuk"
+                <CheckBox
+                    android:id="@+id/checkBoxMasuk"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Masuk"
@@ -57,15 +56,15 @@
                     android:contentDescription="App Logo Pulang"
                     android:src="@drawable/pulang" />
 
-                <RadioButton
-                    android:id="@+id/radioButtonPulang"
+                <CheckBox
+                    android:id="@+id/checkBoxPulang"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Pulang"
                     android:textSize="18sp"
                     android:layout_marginTop="10dp" />
             </LinearLayout>
-        </RadioGroup>
+        </LinearLayout>
 
         <ImageView
             android:id="@+id/imageView"

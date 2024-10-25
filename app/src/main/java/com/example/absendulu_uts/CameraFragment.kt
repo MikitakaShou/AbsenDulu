@@ -8,9 +8,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.ImageView
-import android.widget.RadioButton
-import android.widget.RadioGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -35,9 +34,8 @@ fun base64ToBitmap(base64Str: String): Bitmap {
 
 class CameraFragment : Fragment() {
     private lateinit var imageView: ImageView
-    private lateinit var radioGroup: RadioGroup
-    private lateinit var radioButtonMasuk: RadioButton
-    private lateinit var radioButtonPulang: RadioButton
+    private lateinit var checkBoxMasuk: CheckBox
+    private lateinit var checkBoxPulang: CheckBox
     private lateinit var captureButton: Button
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
@@ -48,17 +46,31 @@ class CameraFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_camera, container, false)
         imageView = view.findViewById(R.id.imageView)
-        radioGroup = view.findViewById(R.id.radioGroup)
-        radioButtonMasuk = view.findViewById(R.id.radioButtonMasuk)
-        radioButtonPulang = view.findViewById(R.id.radioButtonPulang)
+        checkBoxMasuk = view.findViewById(R.id.checkBoxMasuk)
+        checkBoxPulang = view.findViewById(R.id.checkBoxPulang)
         captureButton = view.findViewById(R.id.captureButton)
 
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
 
+        checkBoxMasuk.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                checkBoxPulang.isEnabled = false
+            } else {
+                checkBoxPulang.isEnabled = true
+            }
+        }
+
+        checkBoxPulang.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                checkBoxMasuk.isEnabled = false
+            } else {
+                checkBoxMasuk.isEnabled = true
+            }
+        }
+
         captureButton.setOnClickListener {
-            val selectedId = radioGroup.checkedRadioButtonId
-            if (selectedId == -1) {
+            if (!checkBoxMasuk.isChecked && !checkBoxPulang.isChecked) {
                 Toast.makeText(context, "Please select absensi type", Toast.LENGTH_SHORT).show()
             } else {
                 openCamera()
@@ -86,8 +98,7 @@ class CameraFragment : Fragment() {
         val user = auth.currentUser
         val timestamp = System.currentTimeMillis()
         val date = Date(timestamp)
-        val selectedId = radioGroup.checkedRadioButtonId
-        val absensiType = if (selectedId == R.id.radioButtonMasuk) "masuk" else "pulang"
+        val absensiType = if (checkBoxMasuk.isChecked) "masuk" else "pulang"
         val imageBase64 = bitmapToBase64(image)
 
         val attendance = hashMapOf(
