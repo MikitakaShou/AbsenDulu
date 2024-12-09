@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "811290346387",
-    "project_id": "absenduluuts",
-    "storage_bucket": "absenduluuts.appspot.com"
+    "project_number": "904823666268",
+    "project_id": "utslab-fd7ed",
+    "storage_bucket": "utslab-fd7ed.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:811290346387:android:0ddec296e5322ba8375e66",
+        "mobilesdk_app_id": "1:904823666268:android:0610c3e32add4f9b20d899",
         "android_client_info": {
           "package_name": "com.example.absendulu_uts"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCX42jSkqI1JY6zi7Yt8CSOQAWdyHacpUc"
+          "current_key": "AIzaSyBN_QLAKVs6lfxBSRnf2syob7nFW_yWOi4"
         }
       ],
       "services": {

@@ -1,4 +1,5 @@
 <resources>
+    <string name="app_name">AbsenDulu UTS</string>
     <string name="image_view_desc">Image View</string>
     <string name="image_view_masuk_desc">Absensi Masuk Image</string>
     <string name="image_view_pulang_desc">Absensi Pulang Image</string>

@@ -1,138 +1,62 @@
 package com.example.absendulu_uts
 
-import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
-import android.provider.MediaStore
-import android.util.Base64
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import java.io.ByteArrayOutputStream
-import java.text.SimpleDateFormat
-import java.util.*
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import com.example.absendulu_uts.screens.CameraScreen
+import com.example.absendulu_uts.screens.HistoryScreen
+import com.example.absendulu_uts.screens.ProfileScreen
 
-class MainActivity : AppCompatActivity() {
-    private lateinit var auth: FirebaseAuth
-    private lateinit var db: FirebaseFirestore
-    private lateinit var imageView: ImageView
-
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        auth = FirebaseAuth.getInstance()
-        db = FirebaseFirestore.getInstance()
-
-        // Check if user is logged in
-        if (auth.currentUser == null) {
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
-            return
+        setContent {
+            MainScreen()
         }
+    }
+}
 
-        val bottomNavigation: BottomNavigationView = findViewById(R.id.bottom_navigation)
-        bottomNavigation.setOnNavigationItemSelectedListener { item ->
-            var selectedFragment: Fragment? = null
-            when (item.itemId) {
-                R.id.navigation_profile -> selectedFragment = ProfileFragment()
-                R.id.navigation_camera -> selectedFragment = CameraFragment()
-                R.id.navigation_history -> selectedFragment = HistoryFragment()
+@Composable
+fun MainScreen() {
+    var selectedScreen by remember { mutableStateOf(Screen.Profile) }
+
+    Scaffold(
+        bottomBar = {
+            BottomNavigation {
+                BottomNavigationItem(
+                    icon = { Icon(painterResource(R.drawable.ic_profile), contentDescription = "Profile") },
+                    label = { Text("Profile") },
+                    selected = selectedScreen == Screen.Profile,
+                    onClick = { selectedScreen = Screen.Profile }
+                )
+                BottomNavigationItem(
+                    icon = { Icon(painterResource(R.drawable.ic_camera), contentDescription = "Camera") },
+                    label = { Text("Camera") },
+                    selected = selectedScreen == Screen.Camera,
+                    onClick = { selectedScreen = Screen.Camera }
+                )
+                BottomNavigationItem(
+                    icon = { Icon(painterResource(R.drawable.ic_history), contentDescription = "History") },
+                    label = { Text("History") },
+                    selected = selectedScreen == Screen.History,
+                    onClick = { selectedScreen = Screen.History }
+                )
             }
-            if (selectedFragment != null) {
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container, selectedFragment)
-                    .commit()
-            }
-            true
-        }
-
-        // Set default selection
-        bottomNavigation.selectedItemId = R.id.navigation_profile
-
-        // Logout button functionality
-        val logoutButton: Button = findViewById(R.id.logoutButton)
-        logoutButton.setOnClickListener {
-            auth.signOut()
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
-        }
-    }
-
-    private fun openCamera() {
-        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        startActivityForResult(intent, 101)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 101 && resultCode == RESULT_OK) {
-            val imageBitmap = data?.extras?.get("data") as Bitmap
-            imageView.setImageBitmap(imageBitmap)
-            checkAndSaveAttendance(imageBitmap)
-        }
-    }
-
-    private fun checkAndSaveAttendance(image: Bitmap) {
-        val user = auth.currentUser
-        val currentDate = getCurrentDate()
-
-        db.collection("attendance")
-            .whereEqualTo("userId", user?.uid)
-            .whereEqualTo("date", currentDate)
-            .get()
-            .addOnSuccessListener { documents ->
-                if (documents.isEmpty) {
-                    saveAttendance(image)
-                } else {
-                    Toast.makeText(this, "You have already recorded attendance today", Toast.LENGTH_SHORT).show()
+        },
+        content = { paddingValues ->
+            Surface(modifier = Modifier.padding(paddingValues)) {
+                when (selectedScreen) {
+                    Screen.Profile -> ProfileScreen()
+                    Screen.Camera -> CameraScreen(onCaptureClick = { /* Handle Camera */ }, faceBitmap = null)
+                    Screen.History -> HistoryScreen()
                 }
             }
-            .addOnFailureListener {
-                Toast.makeText(this, "Failed to check attendance", Toast.LENGTH_SHORT).show()
-            }
-    }
-
-    private fun saveAttendance(image: Bitmap) {
-        val user = auth.currentUser
-        val timestamp = System.currentTimeMillis()
-        val date = Date(timestamp)
-        val currentDate = getCurrentDate()
-        val attendance = hashMapOf(
-            "userId" to user?.uid,
-            "timestamp" to date,
-            "date" to currentDate,
-            "image" to bitmapToBase64(image)
-        )
-
-        db.collection("attendance")
-            .add(attendance)
-            .addOnSuccessListener {
-                Toast.makeText(this, "Attendance recorded", Toast.LENGTH_SHORT).show()
-            }
-            .addOnFailureListener {
-                Toast.makeText(this, "Failed to record attendance", Toast.LENGTH_SHORT).show()
-            }
-    }
-
-    private fun getCurrentDate(): String {
-        val calendar = Calendar.getInstance()
-        if (calendar.get(Calendar.HOUR_OF_DAY) < 8) {
-            calendar.add(Calendar.DATE, -1)
         }
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        return dateFormat.format(calendar.time)
-    }
-
-    private fun bitmapToBase64(bitmap: Bitmap): String {
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
-        val byteArray = byteArrayOutputStream.toByteArray()
-        return Base64.encodeToString(byteArray, Base64.DEFAULT)
-    }
+    )
 }

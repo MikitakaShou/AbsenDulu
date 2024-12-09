@@ -2,47 +2,87 @@ package com.example.absendulu_uts
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
-import android.widget.EditText
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.Button
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
 
-class LoginActivity : AppCompatActivity() {
-    private lateinit var auth: FirebaseAuth
-    private lateinit var emailField: EditText
-    private lateinit var passwordField: EditText
-    private lateinit var registerButton: Button
-    private lateinit var loginButton: Button
-
+class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
-
-        auth = FirebaseAuth.getInstance()
-        emailField = findViewById(R.id.email)
-        passwordField = findViewById(R.id.password)
-        registerButton = findViewById(R.id.registerButton)
-        loginButton = findViewById(R.id.loginButton)
-
-        registerButton.setOnClickListener {
-            val intent = Intent(this, RegisterActivity::class.java)
-            startActivity(intent)
+        setContent {
+            LoginScreen(
+                onLoginClick = { email, password ->
+                    loginUser(email, password)
+                },
+                onRegisterClick = {
+                    // Handle register click, for example, navigate to RegisterActivity
+                    val intent = Intent(this, RegisterActivity::class.java)
+                    startActivity(intent)
+                }
+            )
         }
+    }
 
-        loginButton.setOnClickListener {
-            val email = emailField.text.toString().trim()
-            val password = passwordField.text.toString().trim()
-
-            auth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this) { task ->
-                    if (task.isSuccessful) {
+    private fun loginUser(email: String, password: String) {
+        val auth = FirebaseAuth.getInstance()
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    val user = auth.currentUser
+                    if (user?.isEmailVerified == true) {
+                        // Start ProfileFragment
                         startActivity(Intent(this, MainActivity::class.java))
                         finish()
                     } else {
-                        Toast.makeText(this, "Login failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Please verify your email first.", Toast.LENGTH_SHORT).show()
                     }
+                } else {
+                    Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show()
                 }
+            }
+    }
+}
+
+@Composable
+fun LoginScreen(onLoginClick: (String, String) -> Unit, onRegisterClick: () -> Unit) {
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = { onLoginClick(email, password) }) {
+            Text("Login")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = onRegisterClick) {
+            Text("Register")
         }
     }
 }
