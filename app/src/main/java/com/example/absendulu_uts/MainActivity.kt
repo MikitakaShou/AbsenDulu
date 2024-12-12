@@ -1,5 +1,6 @@
 package com.example.absendulu_uts
 
+import android.graphics.Bitmap
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -26,12 +27,6 @@ fun MainScreen() {
     var selectedScreen by remember { mutableStateOf(Screen.Profile) }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Absen Dulu") },
-                backgroundColor = MaterialTheme.colors.primary
-            )
-        },
         bottomBar = {
             BottomNavigation {
                 BottomNavigationItem(
@@ -52,13 +47,6 @@ fun MainScreen() {
                     selected = selectedScreen == Screen.History,
                     onClick = { selectedScreen = Screen.History }
                 )
-            }
-        },
-        floatingActionButton = {
-            if (selectedScreen == Screen.Camera) {
-                FloatingActionButton(onClick = { /* Handle Camera Capture */ }) {
-                    Icon(painterResource(R.drawable.ic_camera), contentDescription = "Capture")
-                }
             }
         },
         content = { paddingValues ->

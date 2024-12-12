@@ -6,10 +6,13 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
 
@@ -30,24 +33,23 @@ class LoginActivity : ComponentActivity() {
     }
 
     private fun loginUser(email: String, password: String) {
-        if (email.isBlank() || password.isBlank()) {
-            Toast.makeText(this, "Email and password must not be empty", Toast.LENGTH_SHORT).show()
-            return
-        }
-
         val auth = FirebaseAuth.getInstance()
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     val user = auth.currentUser
                     if (user?.isEmailVerified == true) {
+                        // Jika email terverifikasi, lanjutkan ke MainActivity
                         startActivity(Intent(this, MainActivity::class.java))
                         finish()
                     } else {
-                        Toast.makeText(this, "Please verify your email first.", Toast.LENGTH_SHORT).show()
+                        // Jika email belum terverifikasi, kirimkan ke halaman Verifikasi
+                        Toast.makeText(this, "Please verify your email.", Toast.LENGTH_SHORT).show()
+                        startActivity(Intent(this, VerificationActivity::class.java))
+                        finish()
                     }
                 } else {
-                    Toast.makeText(this, "Login failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Login failed. Invalid credentials.", Toast.LENGTH_SHORT).show()
                 }
             }
     }
@@ -57,7 +59,6 @@ class LoginActivity : ComponentActivity() {
 fun LoginScreen(onLoginClick: (String, String) -> Unit, onRegisterClick: () -> Unit) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -72,23 +73,19 @@ fun LoginScreen(onLoginClick: (String, String) -> Unit, onRegisterClick: () -> U
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
+
+        // Menggunakan visualTransformation untuk menyembunyikan password
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
+            visualTransformation = PasswordVisualTransformation(), // Menyembunyikan password dengan tanda bintang
             modifier = Modifier.fillMaxWidth()
         )
+
         Spacer(modifier = Modifier.height(16.dp))
-        if (isLoading) {
-            CircularProgressIndicator()
-        } else {
-            Button(onClick = {
-                isLoading = true
-                onLoginClick(email, password)
-                isLoading = false
-            }) {
-                Text("Login")
-            }
+        Button(onClick = { onLoginClick(email, password) }) {
+            Text("Login")
         }
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = onRegisterClick) {
