@@ -47,6 +47,7 @@ android {
 }
 
 dependencies {
+    implementation("com.google.android.material:material:1.9.0")
     implementation("androidx.compose.ui:ui:1.5.2")
     implementation("androidx.compose.material:material:1.5.2")
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.2")
