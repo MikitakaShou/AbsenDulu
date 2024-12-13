@@ -10,8 +10,8 @@ android {
 
     defaultConfig {
         applicationId = "com.example.absendulu_uts"
-        minSdk = 26
-        targetSdk = 34
+        minSdk = 30
+        targetSdk = 33
         versionCode = 1
         versionName = "1.0"
 
@@ -74,8 +74,19 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview:1.3.1")
     implementation("com.google.android.material:material:1.9.0")
 
+    
+    implementation ("androidx.camera:camera-core:1.1.0")
+    implementation ("androidx.camera:camera-camera2:1.1.0")
+    implementation ("androidx.camera:camera-lifecycle:1.1.0")
+    implementation ("androidx.camera:camera-view:1.0.0-alpha30")
+    implementation ("com.google.guava:guava:31.0.1-android")
+
     // Coil dependency
     implementation("io.coil-kt:coil-compose:2.0.0")
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.firebase.crashlytics.buildtools)
 
     // Testing dependencies
     testImplementation("junit:junit:4.13.2")

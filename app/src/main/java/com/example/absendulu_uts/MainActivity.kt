@@ -102,9 +102,14 @@ fun MainScreen() {
             Surface(modifier = Modifier.padding(paddingValues)) {
                 when (selectedScreen) {
                     Screen.Profile -> ProfileScreen()
-                    Screen.Camera -> CameraScreen(context = LocalContext.current, onCaptureClick = { uri ->
-                        // Handle Camera capture click
-                    })
+                    Screen.Camera -> CameraScreen(
+                        onImageCaptured = { uri: Uri ->
+                            // Handle Camera capture click
+                        },
+                        onError = { throwable: Throwable ->
+                            // Handle error
+                        }
+                    )
                     Screen.History -> HistoryScreen(absenList = absenList)
                 }
             }

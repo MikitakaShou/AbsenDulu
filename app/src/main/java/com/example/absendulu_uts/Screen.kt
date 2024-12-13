@@ -4,5 +4,5 @@ enum class Screen {
     Profile,
     Camera,
     History,
-    //Absen
+
 }

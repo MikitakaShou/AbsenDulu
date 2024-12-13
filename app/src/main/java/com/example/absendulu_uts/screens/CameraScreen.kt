@@ -1,16 +1,15 @@
 package com.example.absendulu_uts.screens
 
-import android.app.Activity
-import android.app.DatePickerDialog
 import android.content.Context
-import android.content.Intent
-import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Environment
-import android.provider.MediaStore
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import android.util.Log
+import android.widget.Toast
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -18,84 +17,170 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.core.content.FileProvider
-import com.example.absendulu_uts.BuildConfig
-import com.example.absendulu_uts.R
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.LifecycleOwner
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
-
-private const val REQUEST_IMAGE_CAPTURE = 1
-
-private fun createImageFile(context: Context): File {
-    val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-    val storageDir: File? = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-    return File.createTempFile(
-        "JPEG_${timeStamp}_",
-        ".jpg",
-        storageDir
-    )
-}
+import androidx.compose.foundation.clickable
+import androidx.compose.material.Card
+import androidx.compose.material.Icon
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.background
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.window.Dialog
+import com.example.absendulu_uts.R
+import android.app.DatePickerDialog
+import androidx.compose.ui.viewinterop.AndroidView
+import com.google.common.util.concurrent.ListenableFuture
 
 @Composable
 fun CameraScreen(
-    context: Context,
-    onCaptureClick: (Uri) -> Unit
+    onImageCaptured: (Uri) -> Unit,
+    onError: (Throwable) -> Unit
 ) {
-    val activity = context as Activity
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
-    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+    val context = LocalContext.current
+    val lifecycleOwner = LocalContext.current as LifecycleOwner
+    val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> = ProcessCameraProvider.getInstance(context)
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        imageUri?.let {
-            bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, it)
-            bitmap?.let { bmp ->
-                Image(
-                    bitmap = bmp.asImageBitmap(),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                )
-            }
-        }
+    var previewView by remember { mutableStateOf<PreviewView?>(null) }
+    var outputUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedScreen by remember { mutableStateOf<Screen?>(null) }
 
-        Button(onClick = {
-            val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            val photoFile: File? = try {
-                createImageFile(context)
-            } catch (ex: Exception) {
-                null
-            }
-            photoFile?.also {
-                val photoURI: Uri = FileProvider.getUriForFile(
-                    context,
-                    "${BuildConfig.APPLICATION_ID}.provider",
-                    it
-                )
-                imageUri = photoURI
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-                activity.startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE)
-                onCaptureClick(photoURI)
-            }
-        }) {
-            Text(text = "Capture Selfie")
+    when (selectedScreen) {
+        Screen.Selfie -> SelfieInputScreen(
+            onCaptureClick = {
+                takePhoto(context, lifecycleOwner, cameraProviderFuture, { uri ->
+                    outputUri = uri
+                    onImageCaptured(uri)
+                }, onError)
+            },
+            onBackClick = { selectedScreen = null },
+            onSaveClick = { /* Handle save action */ }
+        )
+        Screen.Perizinan -> PerizinanInputScreen(
+            context = context,
+            onCaptureClick = {
+                takePhoto(context, lifecycleOwner, cameraProviderFuture, { uri ->
+                    outputUri = uri
+                    onImageCaptured(uri)
+                }, onError)
+            },
+            onBackClick = { selectedScreen = null },
+            onSaveClick = { /* Handle save action */ }
+        )
+        else -> Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            AbsenOptionCard(
+                title = "Absen Masuk",
+                color = Color.Green,
+                iconResId = R.drawable.ic_masuk,
+                onClick = { selectedScreen = Screen.Selfie }
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            AbsenOptionCard(
+                title = "Absen Keluar",
+                color = Color.Red,
+                iconResId = R.drawable.ic_masuk,
+                onClick = { selectedScreen = Screen.Selfie }
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            AbsenOptionCard(
+                title = "Perizinan",
+                color = Color.Blue,
+                iconResId = R.drawable.ic_masuk,
+                onClick = { selectedScreen = Screen.Perizinan }
+            )
         }
     }
 }
+
+private fun bindCameraUseCases(
+    context: Context,
+    lifecycleOwner: LifecycleOwner,
+    previewView: PreviewView,
+    onError: (Throwable) -> Unit
+) {
+    val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> = ProcessCameraProvider.getInstance(context)
+    cameraProviderFuture.addListener({
+        try {
+            val cameraProvider = cameraProviderFuture.get()
+            val preview = Preview.Builder().build().apply {
+                setSurfaceProvider(previewView.surfaceProvider)
+            }
+            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+            cameraProvider.unbindAll()
+            cameraProvider.bindToLifecycle(
+                lifecycleOwner,
+                cameraSelector,
+                preview
+            )
+        } catch (e: Exception) {
+            onError(e)
+        }
+    }, ContextCompat.getMainExecutor(context))
+}
+
+private fun takePhoto(
+    context: Context,
+    lifecycleOwner: LifecycleOwner,
+    cameraProviderFuture: ListenableFuture<ProcessCameraProvider>,
+    onImageCaptured: (Uri) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val outputDirectory = getOutputDirectory(context)
+    val fileName = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+        .format(System.currentTimeMillis()) + ".jpg"
+    val photoFile = File(outputDirectory, fileName)
+
+    val imageCapture = ImageCapture.Builder().build()
+
+    try {
+        val cameraProvider = cameraProviderFuture.get()
+        cameraProvider.unbindAll()
+        cameraProvider.bindToLifecycle(
+            lifecycleOwner,
+            CameraSelector.DEFAULT_BACK_CAMERA,
+            imageCapture
+        )
+
+        imageCapture.takePicture(
+            ImageCapture.OutputFileOptions.Builder(photoFile).build(),
+            ContextCompat.getMainExecutor(context),
+            object : ImageCapture.OnImageSavedCallback {
+                override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                    val savedUri = Uri.fromFile(photoFile)
+                    onImageCaptured(savedUri)
+                    Toast.makeText(context, "Photo Saved: $savedUri", Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onError(exception: ImageCaptureException) {
+                    onError(exception)
+                }
+            }
+        )
+    } catch (e: Exception) {
+        onError(e)
+    }
+}
+
+private fun getOutputDirectory(context: Context): File {
+    val mediaDir = context.externalMediaDirs.firstOrNull()?.let {
+        File(it, "CameraXPhotos").apply { mkdirs() }
+    }
+    return if (mediaDir != null && mediaDir.exists()) mediaDir else context.filesDir
+}
+
 
 @Composable
 fun PerizinanInputScreen(
@@ -354,4 +439,9 @@ fun AbsenOptionCard(
             )
         }
     }
+}
+
+enum class Screen {
+    Selfie,
+    Perizinan
 }
