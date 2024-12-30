@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.graphics.Color
 import com.example.absendulu_uts.screens.CameraScreen
 import com.example.absendulu_uts.screens.HistoryScreen
 import com.example.absendulu_uts.screens.ProfileScreen
@@ -77,7 +78,9 @@ fun MainScreen() {
 
     Scaffold(
         bottomBar = {
-            BottomNavigation {
+            BottomNavigation(
+                backgroundColor = Color.White // Change this to your desired color
+            ) {
                 BottomNavigationItem(
                     icon = { Icon(painterResource(R.drawable.ic_profile), contentDescription = "Profile") },
                     label = { Text("Profile") },
@@ -86,7 +89,7 @@ fun MainScreen() {
                 )
                 BottomNavigationItem(
                     icon = { Icon(painterResource(R.drawable.ic_camera), contentDescription = "Camera") },
-                    label = { Text("Camera") },
+                    label = { Text("Absen") },
                     selected = selectedScreen == Screen.Camera,
                     onClick = { selectedScreen = Screen.Camera }
                 )

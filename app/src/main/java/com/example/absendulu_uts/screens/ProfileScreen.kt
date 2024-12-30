@@ -181,32 +181,70 @@ fun ProfileScreen(absenViewModel: AbsenViewModel = viewModel()) {
 
                     Spacer(modifier = Modifier.width(16.dp))
 
-                    Column{
+                    Column {
                         Row(
                             verticalAlignment = Alignment.Top
                         ) {
-                            Text(text = "Name", fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(60.dp))
-                            Text(text = ":", fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(10.dp))
-                            Text(text = name, fontSize = 16.sp)
+                            Text(
+                                text = "Name",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.width(60.dp)
+                            )
+                            Text(
+                                text = ":",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.width(10.dp)
+                            )
+                            Text(
+                                text = name,
+                                fontSize = 16.sp
+                            )
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(
                             verticalAlignment = Alignment.Top
                         ) {
-                            Text(text = "Email", fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(60.dp))
-                            Text(text = ":", fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(10.dp))
-                            Text(text = email, fontSize = 16.sp)
+                            Text(
+                                text = "Email",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.width(60.dp)
+                            )
+                            Text(
+                                text = ":",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.width(10.dp)
+                            )
+                            Text(
+                                text = email,
+                                fontSize = 16.sp
+                            )
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(
                             verticalAlignment = Alignment.Top
                         ) {
-                            Text(text = "NIM", fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(60.dp))
-                            Text(text = ":", fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(10.dp))
-                            Text(text = nim, fontSize = 16.sp)
+                            Text(
+                                text = "NIM",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.width(60.dp)
+                            )
+                            Text(
+                                text = ":",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.width(10.dp)
+                            )
+                            Text(
+                                text = nim,
+                                fontSize = 16.sp
+                            )
                         }
                     }
-
                 }
             }
         }
@@ -267,6 +305,10 @@ fun ProfileScreen(absenViewModel: AbsenViewModel = viewModel()) {
         }
     }
 }
+
+
+
+
 
 // Resize the image for Firestore storage
 fun resizeBitmap(bitmap: Bitmap, width: Int, height: Int): Bitmap {
