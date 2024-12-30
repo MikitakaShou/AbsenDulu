@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -118,6 +119,12 @@ fun RegisterScreen(onBackClick: () -> Unit, onRegisterClick: (String, String, St
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.absendulu),
+            contentDescription = "Logo",
+            modifier = Modifier.size(200.dp)
+        )
+
         IconButton(
             onClick = onBackClick,
             modifier = Modifier.align(Alignment.Start)

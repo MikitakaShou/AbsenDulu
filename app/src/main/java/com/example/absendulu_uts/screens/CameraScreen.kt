@@ -93,6 +93,13 @@ fun CameraScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            Image(
+                painter = painterResource(id = R.drawable.absendulu),
+                contentDescription = "Logo",
+                modifier = Modifier
+                    .size(250.dp) // Adjust the size as needed
+                    .padding(bottom = 16.dp) // Add some space between the logo and the cards
+            )
             AbsenOptionCard(
                 title = "Absen Masuk",
                 color = Color.Green,

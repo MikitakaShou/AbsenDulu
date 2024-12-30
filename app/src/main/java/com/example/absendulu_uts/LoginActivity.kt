@@ -7,6 +7,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -21,6 +22,7 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.nativeKeyCode
+import androidx.compose.ui.res.painterResource
 import com.google.firebase.auth.FirebaseAuth
 
 class LoginActivity : ComponentActivity() {
@@ -75,6 +77,11 @@ fun LoginScreen(onLoginClick: (String, String) -> Unit, onRegisterClick: () -> U
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.absendulu),
+            contentDescription = "Logo",
+            modifier = Modifier.size(200.dp)
+        )
         // Input untuk Email dengan KeyEvent untuk Tab dan Enter
         OutlinedTextField(
             value = email,
