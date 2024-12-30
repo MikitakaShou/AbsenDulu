@@ -82,7 +82,7 @@ dependencies {
     implementation ("com.google.guava:guava:31.0.1-android")
 
     // Coil dependency
-    implementation("io.coil-kt:coil-compose:2.0.0")
+    implementation("io.coil-kt:coil-compose:2.1.0")
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)

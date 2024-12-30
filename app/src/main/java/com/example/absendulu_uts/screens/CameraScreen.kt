@@ -39,6 +39,13 @@ import com.example.absendulu_uts.R
 import android.app.DatePickerDialog
 import androidx.compose.ui.viewinterop.AndroidView
 import com.google.common.util.concurrent.ListenableFuture
+import java.util.concurrent.TimeUnit
+import com.google.firebase.firestore.FirebaseFirestore
+import androidx.compose.foundation.Image
+import coil.compose.rememberImagePainter
+import androidx.compose.ui.layout.ContentScale
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.absendulu_uts.viewmodel.AbsenViewModel
 
 @Composable
 fun CameraScreen(
@@ -48,6 +55,8 @@ fun CameraScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalContext.current as LifecycleOwner
     val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> = ProcessCameraProvider.getInstance(context)
+    val absenViewModel: AbsenViewModel = viewModel() // Get ViewModel instance
+    var isAbsenMasuk by remember { mutableStateOf(true) }
 
     var previewView by remember { mutableStateOf<PreviewView?>(null) }
     var outputUri by remember { mutableStateOf<Uri?>(null) }
@@ -55,6 +64,7 @@ fun CameraScreen(
 
     when (selectedScreen) {
         Screen.Selfie -> SelfieInputScreen(
+            absenViewModel = absenViewModel,
             onCaptureClick = {
                 takePhoto(context, lifecycleOwner, cameraProviderFuture, { uri ->
                     outputUri = uri
@@ -62,10 +72,12 @@ fun CameraScreen(
                 }, onError)
             },
             onBackClick = { selectedScreen = null },
-            onSaveClick = { /* Handle save action */ }
+            onSaveClick = { /* Handle save action */ },
+            isAbsenMasuk = isAbsenMasuk, // Pass the correct value
+            onNavigateBack = { selectedScreen = null }
         )
         Screen.Perizinan -> PerizinanInputScreen(
-            context = context,
+            absenViewModel = absenViewModel,
             onCaptureClick = {
                 takePhoto(context, lifecycleOwner, cameraProviderFuture, { uri ->
                     outputUri = uri
@@ -73,7 +85,8 @@ fun CameraScreen(
                 }, onError)
             },
             onBackClick = { selectedScreen = null },
-            onSaveClick = { /* Handle save action */ }
+            onSaveClick = { /* Handle save action */ },
+            onNavigateBack = { selectedScreen = null }
         )
         else -> Column(
             modifier = Modifier.fillMaxSize(),
@@ -84,14 +97,14 @@ fun CameraScreen(
                 title = "Absen Masuk",
                 color = Color.Green,
                 iconResId = R.drawable.ic_masuk,
-                onClick = { selectedScreen = Screen.Selfie }
+                onClick = { selectedScreen = Screen.Selfie; isAbsenMasuk = true }
             )
             Spacer(modifier = Modifier.height(16.dp))
             AbsenOptionCard(
                 title = "Absen Keluar",
                 color = Color.Red,
                 iconResId = R.drawable.ic_masuk,
-                onClick = { selectedScreen = Screen.Selfie }
+                onClick = { selectedScreen = Screen.Selfie; isAbsenMasuk = false }
             )
             Spacer(modifier = Modifier.height(16.dp))
             AbsenOptionCard(
@@ -104,6 +117,67 @@ fun CameraScreen(
     }
 }
 
+fun saveAbsenMasuk(viewModel: AbsenViewModel, timestamp: String, notes: String, photoUri: Uri, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+    val db = FirebaseFirestore.getInstance()
+    val absenData = AbsenData(
+        id = db.collection("absen").document().id,
+        type = "Absen Masuk",
+        nama = viewModel.name.value ?: "",
+        timestamp = timestamp,
+        notes = notes,
+        photoUri = photoUri.toString()
+    )
+    db.collection("absen")
+        .document(absenData.id)
+        .set(absenData)
+        .addOnSuccessListener {
+            viewModel.addAbsenData(absenData) // Update ViewModel
+            onSuccess()
+        }
+        .addOnFailureListener { e -> onFailure(e) }
+}
+
+fun saveAbsenKeluar(viewModel: AbsenViewModel, timestamp: String, notes: String, photoUri: Uri, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+    val db = FirebaseFirestore.getInstance()
+    val absenData = AbsenData(
+        id = db.collection("absen").document().id,
+        type = "Absen Keluar",
+        nama = viewModel.name.value ?: "",
+        timestamp = timestamp,
+        notes = notes,
+        photoUri = photoUri.toString()
+    )
+    db.collection("absen")
+        .document(absenData.id)
+        .set(absenData)
+        .addOnSuccessListener {
+            viewModel.addAbsenData(absenData) // Update ViewModel
+            onSuccess()
+        }
+        .addOnFailureListener { e -> onFailure(e) }
+}
+
+fun savePerizinan(viewModel: AbsenViewModel, startDate: String, endDate: String, notes: String, photoUri: Uri, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+    val db = FirebaseFirestore.getInstance()
+    val izinData = IzinData(
+        id = db.collection("izin").document().id,
+        type = "Perizinan",
+        nama = viewModel.name.value ?: "",
+        startDate = startDate,
+        endDate = endDate,
+        notes = notes,
+        photoUri = photoUri.toString()
+    )
+    db.collection("izin")
+        .document(izinData.id)
+        .set(izinData)
+        .addOnSuccessListener {
+            viewModel.addIzinData(izinData) // Update ViewModel
+            onSuccess()
+        }
+        .addOnFailureListener { e -> onFailure(e) }
+}
+
 private fun bindCameraUseCases(
     context: Context,
     lifecycleOwner: LifecycleOwner,
@@ -113,7 +187,7 @@ private fun bindCameraUseCases(
     val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> = ProcessCameraProvider.getInstance(context)
     cameraProviderFuture.addListener({
         try {
-            val cameraProvider = cameraProviderFuture.get()
+            val cameraProvider = cameraProviderFuture.get(10, TimeUnit.SECONDS) // Increase timeout to 10 seconds
             val preview = Preview.Builder().build().apply {
                 setSurfaceProvider(previewView.surfaceProvider)
             }
@@ -165,12 +239,57 @@ private fun takePhoto(
                 }
 
                 override fun onError(exception: ImageCaptureException) {
+                    Log.e("CameraScreen", "Photo capture failed: ${exception.message}", exception)
                     onError(exception)
                 }
             }
         )
     } catch (e: Exception) {
+        Log.e("CameraScreen", "Failed to capture photo: ${e.message}", e)
         onError(e)
+    }
+}
+
+@Composable
+fun FullScreenCamera(
+    onImageCaptured: (Uri) -> Unit,
+    onBackClick: () -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalContext.current as LifecycleOwner
+    val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> = ProcessCameraProvider.getInstance(context)
+    var previewView by remember { mutableStateOf<PreviewView?>(null) }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        AndroidView(
+            factory = { ctx ->
+                PreviewView(ctx).apply {
+                    scaleType = PreviewView.ScaleType.FILL_CENTER
+                    previewView = this
+                }
+            },
+            modifier = Modifier.fillMaxSize()
+        )
+        LaunchedEffect(Unit) {
+            bindCameraUseCases(context, lifecycleOwner, previewView!!) {
+                onError(it)
+            }
+        }
+        Button(
+            onClick = {
+                takePhoto(context, lifecycleOwner, cameraProviderFuture, onImageCaptured, onError)
+            },
+            modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp)
+        ) {
+            Text(text = "Capture")
+        }
+        IconButton(
+            onClick = onBackClick,
+            modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
+        ) {
+            Icon(painter = painterResource(id = R.drawable.ic_back), contentDescription = "Back")
+        }
     }
 }
 
@@ -184,24 +303,34 @@ private fun getOutputDirectory(context: Context): File {
 
 @Composable
 fun PerizinanInputScreen(
-    context: Context,
+    absenViewModel: AbsenViewModel,
     onCaptureClick: () -> Unit,
     onBackClick: () -> Unit,
-    onSaveClick: () -> Unit
+    onSaveClick: () -> Unit,
+    onNavigateBack: () -> Unit
 ) {
+    var isCameraActive by remember { mutableStateOf(false) }
+    var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
+    val context = LocalContext.current
+    val lifecycleOwner = LocalContext.current as LifecycleOwner
+    val previewView = remember { PreviewView(context) }
     var notes by remember { mutableStateOf(TextFieldValue("")) }
     var startDate by remember { mutableStateOf("") }
     var endDate by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
+    var showConfirmationDialog by remember { mutableStateOf(false) }
+    var showWarningDialog by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
 
     val calendar = Calendar.getInstance()
-    val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val dateFormatter = SimpleDateFormat("EEEE, yyyy-MM-dd", Locale.getDefault())
 
     val showDatePickerDialog = { dateSetter: (String) -> Unit ->
         DatePickerDialog(
             context,
             { _, year, month, dayOfMonth ->
-                val selectedDate = "$year-${(month + 1).toString().padStart(2, '0')}-${dayOfMonth.toString().padStart(2, '0')}"
+                calendar.set(year, month, dayOfMonth)
+                val selectedDate = dateFormatter.format(calendar.time)
                 dateSetter(selectedDate)
             },
             calendar.get(Calendar.YEAR),
@@ -210,91 +339,136 @@ fun PerizinanInputScreen(
         ).show()
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        IconButton(
-            onClick = onBackClick,
-            modifier = Modifier.align(Alignment.Start)
-        ) {
-            Icon(painter = painterResource(id = R.drawable.ic_back), contentDescription = "Back")
-        }
-
-        Text(
-            text = "Surat izin jika ada.",
-            color = Color.Red,
-            fontSize = 16.sp,
-            textAlign = TextAlign.Center
+    if (isCameraActive) {
+        FullScreenCamera(
+            onImageCaptured = { uri ->
+                capturedImageUri = uri
+                isCameraActive = false
+            },
+            onBackClick = { isCameraActive = false },
+            onError = { Log.e("CameraError", it.message ?: "Unknown error") }
         )
-
-        Box(
+    } else {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .background(Color.Gray),
-            contentAlignment = Alignment.Center
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Camera Preview")
-        }
+            IconButton(
+                onClick = onBackClick,
+                modifier = Modifier.align(Alignment.Start)
+            ) {
+                Icon(painter = painterResource(id = R.drawable.ic_back), contentDescription = "Back")
+            }
 
-        Button(
-            onClick = { showDatePickerDialog { date -> startDate = date } },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = if (startDate.isEmpty()) "Select Start Date" else startDate)
-        }
+            Text(
+                text = "Surat izin jika ada.",
+                color = Color.Red,
+                fontSize = 16.sp,
+                textAlign = TextAlign.Center
+            )
 
-        Button(
-            onClick = { showDatePickerDialog { date -> endDate = date } },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = if (endDate.isEmpty()) "Select End Date" else endDate)
-        }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 9f)
+                    .background(Color.Gray)
+                    .clickable { isCameraActive = true },
+                contentAlignment = Alignment.Center
+            ) {
+                capturedImageUri?.let { uri ->
+                    Image(
+                        painter = rememberImagePainter(uri),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } ?: Text(text = "Add Photo")
+            }
 
-        OutlinedTextField(
-            value = notes,
-            onValueChange = { newValue -> notes = newValue },
-            label = { Text("Notes") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp)
-                .background(Color.White)
-                .padding(8.dp)
-        )
+            Button(
+                onClick = { showDatePickerDialog { date -> startDate = date } },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = if (startDate.isEmpty()) "Select Start Date" else startDate)
+            }
 
-        Button(onClick = onCaptureClick) {
-            Text(text = "Capture Selfie")
-        }
+            Button(
+                onClick = { showDatePickerDialog { date -> endDate = date } },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = if (endDate.isEmpty()) "Select End Date" else endDate)
+            }
 
-        Button(onClick = {
-            onSaveClick()
-            showDialog = true
-        }) {
-            Text(text = "Done")
-        }
+            OutlinedTextField(
+                value = notes,
+                onValueChange = { newValue -> notes = newValue },
+                label = { Text("Notes") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .background(Color.White)
+                    .padding(8.dp)
+            )
 
-        if (showDialog) {
-            Dialog(onDismissRequest = { showDialog = false }) {
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = Color.White,
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(text = "Data tidak dapat dirubah", fontSize = 18.sp)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = { showDialog = false }) {
-                            Text(text = "OK")
+            Button(onClick = {
+                if (notes.text.isEmpty() || startDate.isEmpty() || endDate.isEmpty() || capturedImageUri == null) {
+                    showWarningDialog = true
+                } else {
+                    showConfirmationDialog = true
+                }
+            }) {
+                Text(text = "Done")
+            }
+
+            if (showWarningDialog) {
+                AlertDialog(
+                    onDismissRequest = { showWarningDialog = false },
+                    title = { Text(text = "Warning") },
+                    text = { Text(text = "Please fill in all required fields.") },
+                    confirmButton = {
+                        Button(onClick = { showWarningDialog = false }) {
+                            Text("OK")
                         }
                     }
-                }
+                )
+            }
+
+            if (showConfirmationDialog) {
+                AlertDialog(
+                    onDismissRequest = { showConfirmationDialog = false },
+                    title = { Text(text = "Confirmation") },
+                    text = { Text(text = "Data yang telah diisi tidak dapat diubah kembali.") },
+                    confirmButton = {
+                        Button(onClick = {
+                            showConfirmationDialog = false
+                            isLoading = true
+                            val notesText = notes.text
+                            val photoUri = capturedImageUri!!
+                            savePerizinan(absenViewModel, startDate, endDate, notesText, photoUri, {
+                                isLoading = false
+                                onSaveClick()
+                                onNavigateBack()
+                            }, { e ->
+                                isLoading = false
+                                Log.e("FirestoreError", "Failed to save perizinan: ${e.message}", e)
+                            })
+                        }) {
+                            Text("OK")
+                        }
+                    },
+                    dismissButton = {
+                        Button(onClick = { showConfirmationDialog = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
+
+            if (isLoading) {
+                CircularProgressIndicator()
             }
         }
     }
@@ -302,102 +476,154 @@ fun PerizinanInputScreen(
 
 @Composable
 fun SelfieInputScreen(
+    absenViewModel: AbsenViewModel,
     onCaptureClick: () -> Unit,
     onBackClick: () -> Unit,
-    onSaveClick: () -> Unit
+    onSaveClick: () -> Unit,
+    isAbsenMasuk: Boolean,
+    onNavigateBack: () -> Unit
 ) {
+    var isCameraActive by remember { mutableStateOf(false) }
+    var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
+    val context = LocalContext.current
+    val lifecycleOwner = LocalContext.current as LifecycleOwner
+    val previewView = remember { PreviewView(context) }
     var notes by remember { mutableStateOf(TextFieldValue("")) }
-    val currentDateTime = remember { SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()) }
-    val currentLocation = "Current Location (Placeholder)"
+    val currentDateTime = remember { SimpleDateFormat("EEEE, yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()) }
     var showDialog by remember { mutableStateOf(false) }
+    var showConfirmationDialog by remember { mutableStateOf(false) }
+    var showWarningDialog by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        IconButton(
-            onClick = onBackClick,
-            modifier = Modifier.align(Alignment.Start)
-        ) {
-            Icon(painter = painterResource(id = R.drawable.ic_back), contentDescription = "Back")
-        }
-
-        Text(
-            text = "Please ensure your face is visible in the selfie.",
-            color = Color.Red,
-            fontSize = 16.sp,
-            textAlign = TextAlign.Center
+    if (isCameraActive) {
+        FullScreenCamera(
+            onImageCaptured = { uri ->
+                capturedImageUri = uri
+                isCameraActive = false
+            },
+            onBackClick = { isCameraActive = false },
+            onError = { Log.e("CameraError", it.message ?: "Unknown error") }
         )
-
-        Box(
+    } else {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .background(Color.Gray),
-            contentAlignment = Alignment.Center
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Camera Preview")
-        }
+            IconButton(
+                onClick = onBackClick,
+                modifier = Modifier.align(Alignment.Start)
+            ) {
+                Icon(painter = painterResource(id = R.drawable.ic_back), contentDescription = "Back")
+            }
 
-        OutlinedTextField(
-            value = currentDateTime,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("Date and Time") },
-            modifier = Modifier.fillMaxWidth()
-        )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 9f)
+                    .background(Color.Gray)
+                    .clickable { isCameraActive = true },
+                contentAlignment = Alignment.Center
+            ) {
+                capturedImageUri?.let { uri ->
+                    Image(
+                        painter = rememberImagePainter(uri),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } ?: Text(text = "Add Photo")
+            }
 
-        OutlinedTextField(
-            value = currentLocation,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("Location") },
-            modifier = Modifier.fillMaxWidth()
-        )
+            OutlinedTextField(
+                value = currentDateTime,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Date and Time") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
-        OutlinedTextField(
-            value = notes,
-            onValueChange = { newValue -> notes = newValue },
-            label = { Text("Notes") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp)
-                .background(Color.White)
-                .padding(8.dp)
-        )
+            OutlinedTextField(
+                value = notes,
+                onValueChange = { newValue -> notes = newValue },
+                label = { Text("Notes") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .background(Color.White)
+                    .padding(8.dp)
+            )
 
-        Button(onClick = onCaptureClick) {
-            Text(text = "Capture Selfie")
-        }
+            Button(onClick = {
+                if (notes.text.isEmpty() || capturedImageUri == null) {
+                    showWarningDialog = true
+                } else {
+                    showConfirmationDialog = true
+                }
+            }) {
+                Text(text = "Done")
+            }
 
-        Button(onClick = {
-            onSaveClick()
-            showDialog = true
-        }) {
-            Text(text = "Done")
-        }
-
-        if (showDialog) {
-            Dialog(onDismissRequest = { showDialog = false }) {
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = Color.White,
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(text = "Data tidak dapat dirubah", fontSize = 18.sp)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = { showDialog = false }) {
-                            Text(text = "OK")
+            if (showWarningDialog) {
+                AlertDialog(
+                    onDismissRequest = { showWarningDialog = false },
+                    title = { Text(text = "Warning") },
+                    text = { Text(text = "Please fill in all required fields.") },
+                    confirmButton = {
+                        Button(onClick = { showWarningDialog = false }) {
+                            Text("OK")
                         }
                     }
-                }
+                )
+            }
+
+            if (showConfirmationDialog) {
+                AlertDialog(
+                    onDismissRequest = { showConfirmationDialog = false },
+                    title = { Text(text = "Confirmation") },
+                    text = { Text(text = "Data yang telah diisi tidak dapat diubah kembali.") },
+                    confirmButton = {
+                        Button(onClick = {
+                            showConfirmationDialog = false
+                            isLoading = true
+                            val timestamp = currentDateTime
+                            val notesText = notes.text
+                            val photoUri = capturedImageUri!!
+                            if (isAbsenMasuk) {
+                                saveAbsenMasuk(absenViewModel, timestamp, notesText, photoUri, {
+                                    isLoading = false
+                                    onSaveClick()
+                                    onNavigateBack()
+                                }, { e ->
+                                    isLoading = false
+                                    Log.e("FirestoreError", "Failed to save absen masuk: ${e.message}", e)
+                                })
+                            } else {
+                                saveAbsenKeluar(absenViewModel, timestamp, notesText, photoUri, {
+                                    isLoading = false
+                                    onSaveClick()
+                                    onNavigateBack()
+                                }, { e ->
+                                    isLoading = false
+                                    Log.e("FirestoreError", "Failed to save absen keluar: ${e.message}", e)
+                                })
+                            }
+                        }) {
+                            Text("OK")
+                        }
+                    },
+                    dismissButton = {
+                        Button(onClick = { showConfirmationDialog = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
+
+            if (isLoading) {
+                CircularProgressIndicator()
             }
         }
     }

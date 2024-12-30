@@ -23,6 +23,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import com.example.absendulu_uts.screens.CameraScreen
 import com.example.absendulu_uts.screens.HistoryScreen
 import com.example.absendulu_uts.screens.ProfileScreen
+import com.example.absendulu_uts.screens.HistoryData
 import com.example.absendulu_uts.viewmodel.AbsenViewModel
 import java.io.File
 
@@ -73,7 +74,6 @@ class MainActivity : ComponentActivity() {
 fun MainScreen() {
     var selectedScreen by remember { mutableStateOf(Screen.Profile) }
     val viewModel: AbsenViewModel = viewModel()
-    val absenList by viewModel.absenList.observeAsState(emptyList())
 
     Scaffold(
         bottomBar = {
@@ -110,7 +110,7 @@ fun MainScreen() {
                             // Handle error
                         }
                     )
-                    Screen.History -> HistoryScreen(absenList = absenList)
+                    Screen.History -> HistoryScreen(viewModel = viewModel)
                 }
             }
         }
