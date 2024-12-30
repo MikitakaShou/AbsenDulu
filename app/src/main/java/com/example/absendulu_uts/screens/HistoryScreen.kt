@@ -1,5 +1,6 @@
 package com.example.absendulu_uts.screens
 
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -33,6 +34,7 @@ import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideOutHorizontally
+import com.example.absendulu_uts.LoginActivity
 
 
 sealed class HistoryData {
@@ -93,8 +95,15 @@ fun HistoryScreen(viewModel: AbsenViewModel) {
         // Logout Button
         IconButton(
             onClick = {
-                auth.signOut() // Logout
+                // Proses logout
+                auth.signOut()
                 Toast.makeText(context, "Logged out successfully", Toast.LENGTH_SHORT).show()
+
+                // Navigasi ke LoginActivity
+                val intent = Intent(context, LoginActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                context.startActivity(intent)
             },
             modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
         ) {

@@ -1,5 +1,6 @@
 package com.example.absendulu_uts.screens
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
@@ -37,6 +38,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.io.ByteArrayOutputStream
 import androidx.compose.ui.geometry.Offset
+import com.example.absendulu_uts.LoginActivity
 import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.LocalTime
@@ -290,10 +292,19 @@ fun ProfileScreen(absenViewModel: AbsenViewModel = viewModel()) {
             }
         }
 
+        val context = LocalContext.current
+
         IconButton(
             onClick = {
-                auth.signOut() // Logout
+                // Proses logout
+                auth.signOut()
                 Toast.makeText(context, "Logged out successfully", Toast.LENGTH_SHORT).show()
+
+                // Navigasi ke LoginActivity
+                val intent = Intent(context, LoginActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                context.startActivity(intent)
             },
             modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
         ) {
@@ -303,6 +314,7 @@ fun ProfileScreen(absenViewModel: AbsenViewModel = viewModel()) {
                 tint = Color.White // Set icon color to white
             )
         }
+
     }
 }
 
