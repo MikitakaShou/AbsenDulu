@@ -119,18 +119,20 @@ fun RegisterScreen(onBackClick: () -> Unit, onRegisterClick: (String, String, St
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        IconButton(
-            onClick = onBackClick,
-            modifier = Modifier.align(Alignment.Start)
-        ) {
-            Icon(painter = painterResource(id = R.drawable.ic_back), contentDescription = "Back")
-        }
+
 
         Image(
             painter = painterResource(id = R.drawable.absendulu),
             contentDescription = "Logo",
             modifier = Modifier.size(200.dp)
         )
+
+        IconButton(
+            onClick = onBackClick,
+            modifier = Modifier.align(Alignment.Start)
+        ) {
+            Icon(painter = painterResource(id = R.drawable.ic_back), contentDescription = "Back")
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedTextField(
