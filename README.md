@@ -14,3 +14,6 @@ AbsenDulu UTS adalah aplikasi absensi berbasis Android yang memungkinkan penggun
 - fitur absen menggunakan foto dan timestamp : Pengguna melakukan absensi masuk dan pulang dengan cara mengambil foto.
 - fitur history : Pengguna dapat melihat hasil foto absen dan timestamp mereka pada saat pengambilan foto.
 - fitur profile : Pengguna bisa mengisi nama dan id mereka pada saat login, setiap 1 akun email hanya dapat menginput sekali nama dan id mereka dan itu terikat dengan email mereka.
+- fitur update profile picture : Pengguna dapat mengubah foto profil mereka dengan memilih gambar dari galeri.
+- fitur logout : Pengguna dapat keluar dari akun mereka dan kembali ke halaman login.
+- fitur kalendar : Pengguna dapat menenuntukan tanggal mereka ingin izin dan disertai bukti foto alasan izin.
